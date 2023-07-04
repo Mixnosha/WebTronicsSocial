@@ -70,11 +70,12 @@ class PostManager:
 
 
     @staticmethod
-    async def view_all_posts(limit: int, offset: int, 
+    async def view_all_posts(limit: int, skip: int, 
                              session: AsyncSession):
         query = select(Post.id, Post.title, Post.body, Post.created_at, User.email)\
                 .join(User, Post.user_id == User.id)\
-                .order_by(Post.created_at.desc())
+                .order_by(Post.created_at.desc())\
+                .limit(limit).offset(skip)
         res = await session.execute(query)
         res = res.mappings().all()
         return [AllPostModel.from_orm(post) for post in res]

@@ -1,7 +1,7 @@
-from typing import List
+from typing import Annotated, List
 from uuid import UUID
 from aioredis import Redis
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path, Query
 from auth.router import current_user
 from database import get_async_session, get_redis_conn
 from posts.dependencies import is_owner_post, is_owner_reaction, reaction_check
@@ -95,12 +95,16 @@ async def delete_post(post_id: UUID,
             session=session
             )
 
-@router.get("/view_posts")
+@router.get("/view_posts", description="Endpoint has cache func (60sec)")
 @cache(expire=60)
-async def view_posts(session: AsyncSession = Depends(get_async_session)):
+async def view_posts(
+        limit: int = Query(20, le=20), 
+        skip: int = 0,
+        session: AsyncSession = Depends(get_async_session)):
+    
     return await PostManager.view_all_posts(
-            limit=0, 
-            offset=20, 
+            limit=limit, 
+            skip=skip, 
             session=session
             )
 
