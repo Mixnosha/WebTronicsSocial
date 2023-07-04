@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7.0.5-alpine
+    hostname: redis
+    restart: always
+    ports:
+      - '6379:6379'
+
+  postgres:
+    image: postgres:15.2-alpine
+    hostname: postgres
+    restart: always
+    ports:
+      - "54321:5432"
+    environment:
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_USER: "user"
+      POSTGRES_DB: "social"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+  social:
+    build:
+      context: .
+      dockerfile: docker/RESTFullSocial/Dockerfile
+    hostname: social
+    restart: always
+    environment:
+      PYTHONPATH: /RESTFullSocial/src
+    env_file:
+      - RESTFullSocial/.env
+    volumes:
+      - ./RESTFullSocial:/RESTFullSocial
+    ports:
+      - "8000:8000"
+    command: >
+      /bin/sh -c "alembic upgrade head && python src/main.py"
+    depends_on:
+      - redis
+      - postgres
